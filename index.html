@@ -17,8 +17,9 @@
             console.log(`Code scanned: ${decodedText}`);
 
             // Send the QR code data to Google Sheets via fetch API
-            fetch('https://script.google.com/macros/s/AKfycbzw5VdT--gxQ9zZo1IBM9JwVuiiZGpvUoUz7I-RvTLEuawPHT3nT_4AjFI4W5bKI_lb/exec', {
+            fetch("https://script.google.com/macros/s/AKfycbzv3KO_1--hGQaVFou1e81AgySVvhK1CsePkLYlL8JlMwY4AxYWj4Jt3qOCKnpQLVe7/exec", {
                 method: 'POST',
+                mode: 'no-cors', // Disable CORS checks
                 body: JSON.stringify({ qrCode: decodedText }),
                 headers: {
                     'Content-Type': 'application/json'
