@@ -8,31 +8,48 @@
 </head>
 <body>
     <h1>Scan QR Code</h1>
-    <div id="reader" style="width:300px;"></div>
+    <div id="reader" style="width:300px; height:300px;"></div>
+
     <script>
+        // Success callback when QR code is scanned
         function onScanSuccess(decodedText, decodedResult) {
             // Log the decoded result
             console.log(`Code scanned: ${decodedText}`);
 
-            // Send QR code data to Google Sheets
-            fetch('https://docs.google.com/spreadsheets/d/1E-7dUJKCa4HCE18S6O_pOGBrKeBvphwNN_9clvt3Iq4/edit?usp=sharing', {
+            // Send the QR code data to Google Sheets via fetch API
+            fetch('https://docs.google.com/spreadsheets/d/1E-7dUJKCa4HCE18S6O_pOGBrKeBvphwNN_9clvt3Iq4/edit?gid=0#gid=0', {
                 method: 'POST',
                 body: JSON.stringify({ qrCode: decodedText }),
-                headers: { 'Content-Type': 'application/json' }
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             })
             .then(response => response.json())
-            .then(data => console.log('Success:', data))
-            .catch(error => console.error('Error:', error));
+            .then(data => {
+                console.log('Success:', data);
+                alert('QR Code data sent to Google Sheets!');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to send QR Code data to Google Sheets.');
+            });
         }
 
+        // Failure callback for scanning
+        function onScanFailure(error) {
+            // Handle scan failure, ignore for continuous scanning
+            console.warn(`QR Code scan failed: ${error}`);
+        }
+
+        // Create a new Html5QrcodeScanner object
         var html5QrCode = new Html5Qrcode("reader");
+
+        // Start scanning the QR code using the back camera
         html5QrCode.start(
-            { facingMode: "environment" }, // Use the back camera
-            {
-                fps: 10,  // Scanning frames per second
-                qrbox: 250 // Scanning area (size of the box)
-            },
-            onScanSuccess
+            { facingMode: "environment" }, // Use back camera
+            { fps: 10, qrbox: 250 }, // Frame per second and scan area size
+            onScanSuccess,
+            onScanFailure
         );
     </script>
 </body>
