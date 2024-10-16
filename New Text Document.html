@@ -15,7 +15,7 @@
             console.log(`Code scanned: ${decodedText}`);
 
             // Send QR code data to Google Sheets
-            fetch('YOUR_GOOGLE_SCRIPT_WEB_APP_URL', {
+            fetch('https://docs.google.com/spreadsheets/d/1E-7dUJKCa4HCE18S6O_pOGBrKeBvphwNN_9clvt3Iq4/edit?usp=sharing', {
                 method: 'POST',
                 body: JSON.stringify({ qrCode: decodedText }),
                 headers: { 'Content-Type': 'application/json' }
