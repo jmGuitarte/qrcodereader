@@ -47,7 +47,7 @@
         // Start scanning the QR code using the back camera
         html5QrCode.start(
             { facingMode: "environment" }, // Use back camera
-            { fps: 10, qrbox: 250 }, // Frame per second and scan area size
+            { fps: 5, qrbox: 300 }, // Frame per second and scan area size
             onScanSuccess,
             onScanFailure
         );
