@@ -2,59 +2,96 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR Code Scanner</title>
-  <!-- Correct Instascan library -->
-  <script src="https://cdn.jsdelivr.net/npm/instascan@1.0.0/umd/instascan.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- html5-qrcode library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    #qr-reader {
+      width: 300px;
+      margin: auto;
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 1.2em;
+      color: green;
+    }
+    #error {
+      margin-top: 20px;
+      font-size: 1.2em;
+      color: red;
+    }
+  </style>
 </head>
 <body>
   <h1>QR Code Scanner</h1>
-  <p id="message">Initializing camera...</p>
-  <!-- Video feed for QR code scanning -->
-  <video id="preview" width="400" height="300" style="border: 1px solid black;"></video>
+  <div id="qr-reader"></div>
+  <div id="message"></div>
+  <div id="error"></div>
 
   <script>
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwOi_gcuf__DvwGtdd13MZqgWMsHg-CnoSGedN9uzcnUszPKMnsDPJ_mGleDLZSbbE/exec'; // Replace with your Google Apps Script URL
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwOi_gcuf__DvwGtdd13MZqgWMsHg-CnoSGedN9uzcnUszPKMnsDPJ_mGleDLZSbbE/exec'; // Replace with your Apps Script URL
 
-    let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+    function onScanSuccess(decodedText, decodedResult) {
+      // Handle the scanned QR code
+      document.getElementById('message').innerText = `QR Code Scanned: ${decodedText}`;
+      document.getElementById('error').innerText = '';
 
-    scanner.addListener('scan', function (content) {
-      console.log('Scanned QR code:', content);
-      document.getElementById('message').innerText = `QR Code: ${content}`;
-
-      // Send the QR code to the Google Sheet
-      fetch(scriptUrl, {
+      // Send the scanned data to Google Sheets via Apps Script
+      fetch(`${scriptUrl}?callback=handleResponse`, {
         method: 'POST',
-        mode: 'cors',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ qr_code: content })
+        body: JSON.stringify({ qr_code: decodedText })
       })
-      .then(response => response.json())
+      .then(response => response.text())
       .then(data => {
         console.log('Success:', data);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('Error:', error);
+        document.getElementById('error').innerText = 'Failed to send data to Google Sheets.';
       });
-    });
+    }
 
-    // Start the camera
-    Instascan.Camera.getCameras().then(function (cameras) {
-      if (cameras.length > 0) {
-        console.log('Cameras found:', cameras);
-        scanner.start(cameras[0]); // Start scanning from the first camera (usually rear camera)
-        document.getElementById('message').innerText = "Camera started. Point at QR code.";
+    function onScanFailure(error) {
+      // Handle scan failure (optional)
+      console.warn(`QR scan error: ${error}`);
+    }
+
+    // Initialize the QR code scanner
+    const html5QrCode = new Html5Qrcode("qr-reader");
+
+    Html5Qrcode.getCameras().then(cameras => {
+      if (cameras && cameras.length) {
+        // Start scanning with the first available camera
+        const cameraId = cameras[0].id;
+        html5QrCode.start(
+          cameraId,
+          {
+            fps: 10,    // Frames per second
+            qrbox: 250  // QR scanning box size
+          },
+          onScanSuccess,
+          onScanFailure
+        ).catch(err => {
+          console.error('Unable to start scanning:', err);
+          document.getElementById('error').innerText = 'Unable to access camera for scanning.';
+        });
       } else {
         console.error('No cameras found.');
-        document.getElementById('message').innerText = "No camera available.";
+        document.getElementById('error').innerText = 'No camera found on this device.';
       }
-    }).catch(function (e) {
-      console.error('Camera error:', e);
-      document.getElementById('message').innerText = "Error initializing camera.";
+    }).catch(err => {
+      console.error('Error accessing cameras:', err);
+      document.getElementById('error').innerText = 'Error accessing camera.';
     });
-
   </script>
 </body>
 </html>
