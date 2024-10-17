@@ -38,26 +38,29 @@
     const scriptUrl = 'https://script.google.com/macros/s/AKfycbwOi_gcuf__DvwGtdd13MZqgWMsHg-CnoSGedN9uzcnUszPKMnsDPJ_mGleDLZSbbE/exec'; // Replace with your Apps Script URL
 
     function onScanSuccess(decodedText, decodedResult) {
-      // Handle the scanned QR code
+      // Display scanned QR code
       document.getElementById('message').innerText = `QR Code Scanned: ${decodedText}`;
       document.getElementById('error').innerText = '';
 
-      // Send the scanned data to Google Sheets via Apps Script
-      fetch(`${scriptUrl}?callback=handleResponse`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ qr_code: decodedText })
-      })
-      .then(response => response.text())
-      .then(data => {
-        console.log('Success:', data);
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-        document.getElementById('error').innerText = 'Failed to send data to Google Sheets.';
-      });
+      // Create a script tag for JSONP
+      const script = document.createElement('script');
+      script.src = `${scriptUrl}?callback=handleResponse&qr_code=${encodeURIComponent(decodedText)}`;
+
+      // Define the callback function
+      window.handleResponse = function(response) {
+        if(response.status === "success") {
+          console.log('Data successfully sent to Google Sheets.');
+        } else {
+          console.error('Error:', response.message);
+          document.getElementById('error').innerText = 'Failed to send data to Google Sheets.';
+        }
+        // Clean up the script tag after execution
+        document.body.removeChild(script);
+        delete window.handleResponse;
+      };
+
+      // Append the script to the body to initiate the request
+      document.body.appendChild(script);
     }
 
     function onScanFailure(error) {
