@@ -9,18 +9,17 @@
 </head>
 <body>
   <h1>QR Code Scanner</h1>
+  <p id="message">Initializing camera...</p>
   <!-- Video feed for QR code scanning -->
-  <video id="preview" width="400" height="300"></video>
-  <p id="message"></p>
+  <video id="preview" width="400" height="300" style="border: 1px solid black;"></video>
 
   <script>
-    const scriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_URL'; // Replace with the URL from your Apps Script deployment
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwOi_gcuf__DvwGtdd13MZqgWMsHg-CnoSGedN9uzcnUszPKMnsDPJ_mGleDLZSbbE/exec'; // Replace with your Google Apps Script URL
 
-    // Initialize the scanner
     let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
 
     scanner.addListener('scan', function (content) {
-      // Display scanned QR code
+      console.log('Scanned QR code:', content);
       document.getElementById('message').innerText = `QR Code: ${content}`;
 
       // Send the QR code to the Google Sheet
@@ -41,18 +40,21 @@
       });
     });
 
-    // Start the scanner
+    // Start the camera
     Instascan.Camera.getCameras().then(function (cameras) {
       if (cameras.length > 0) {
-        scanner.start(cameras[0]); // Start scanning from the first camera (typically the rear camera on mobile)
+        console.log('Cameras found:', cameras);
+        scanner.start(cameras[0]); // Start scanning from the first camera (usually rear camera)
+        document.getElementById('message').innerText = "Camera started. Point at QR code.";
       } else {
         console.error('No cameras found.');
-        document.getElementById('message').innerText = "No camera available";
+        document.getElementById('message').innerText = "No camera available.";
       }
     }).catch(function (e) {
-      console.error(e);
-      document.getElementById('message').innerText = "Error initializing camera";
+      console.error('Camera error:', e);
+      document.getElementById('message').innerText = "Error initializing camera.";
     });
+
   </script>
 </body>
 </html>
