@@ -1,57 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
-    <title>QR Code Scanner</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
 </head>
 <body>
-    <h1>Scan QR Code</h1>
-    <div id="reader" style="width:300px; height:300px;"></div>
+  <h1>QR Code Scanner</h1>
+  <div id="reader" style="width:500px"></div>
+  <p id="message"></p>
+  
+  <script>
+    const scriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_URL'; // Replace with the URL from your Apps Script deployment
+    
+    function onScanSuccess(qrCodeMessage) {
+      // Display the scanned QR code
+      document.getElementById('message').innerText = `QR Code: ${qrCodeMessage}`;
+      
+      // Send the QR code to the Google Sheet
+      fetch(scriptUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ qr_code: qrCodeMessage })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    }
 
-    <script>
-        // Success callback when QR code is scanned
-        function onScanSuccess(decodedText, decodedResult) {
-            // Log the decoded result
-            console.log(`Code scanned: ${decodedText}`);
+    function onScanError(errorMessage) {
+      // Handle scan errors or failures
+      console.error('Scan error:', errorMessage);
+    }
 
-            // Send the QR code data to Google Sheets via fetch API
-            fetch("https://script.google.com/macros/s/AKfycbz9-sIhtZXKSSWS-TTPh3bud14Iy7cY2jCtgLF6bApYHBltHM1Sb0LHW0bmeTajaUSi/exec", {
-                method: 'POST',
-                mode: 'no-cors', // Disable CORS checks
-                body: JSON.stringify({ qrCode: decodedText }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-                alert('QR Code data sent to Google Sheets!');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to send QR Code data to Google Sheets.');
-            });
-        }
-
-        // Failure callback for scanning
-        function onScanFailure(error) {
-            // Handle scan failure, ignore for continuous scanning
-            console.warn(`QR Code scan failed: ${error}`);
-        }
-
-        // Create a new Html5QrcodeScanner object
-        var html5QrCode = new Html5Qrcode("reader");
-
-        // Start scanning the QR code using the back camera
-        html5QrCode.start(
-            { facingMode: "environment" }, // Use back camera
-            { fps: 5, qrbox: 300 }, // Frame per second and scan area size
-            onScanSuccess,
-            onScanFailure
-        );
-    </script>
+    const html5QrCode = new Html5Qrcode("reader");
+    
+    html5QrCode.start(
+      { facingMode: "environment" }, 
+      {
+        fps: 10, // Frames per second
+        qrbox: { width: 250, height: 250 } // QR code scanning box
+      },
+      onScanSuccess,
+      onScanError
+    );
+  </script>
 </body>
 </html>
