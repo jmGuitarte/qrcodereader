@@ -4,27 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR Code Scanner</title>
-  <!-- Loading html5-qrcode library from a reliable CDN -->
-  <script src="https://unpkg.com/html5-qrcode@2.2.1/minified/html5-qrcode.min.js"></script>
+  <!-- Load the instascan library -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/instascan/1.0.0/instascan.min.js"></script>
 </head>
 <body>
   <h1>QR Code Scanner</h1>
-  <div id="qr-reader" style="width: 500px;"></div>
+  <video id="preview" width="100%"></video>
   <p id="qr-result">Scanned QR Code: None</p>
 
   <script>
-    // Function called when QR code is successfully scanned
-    function onScanSuccess(qrCodeMessage) {
-      document.getElementById("qr-result").innerText = "Scanned QR Code: " + qrCodeMessage;
-      
-      // Send the scanned QR code to the Google Apps Script
+    // Initialize the instascan library
+    let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+
+    scanner.addListener('scan', function(content) {
+      document.getElementById("qr-result").innerText = "Scanned QR Code: " + content;
+
+      // Send the scanned QR code to Google Sheets via Google Apps Script
       fetch('https://script.google.com/macros/s/AKfycbygnN7WeQEc9x1-3OvwjSQyBAmD3LvZqGxeum7zpT2shrC555YDDWC3av73hjDGRw/exec', {
         method: 'POST',
         mode: 'cors',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ qrCode: qrCodeMessage })
+        body: JSON.stringify({ qrCode: content })
       })
       .then(response => response.json())
       .then(data => {
@@ -35,29 +37,18 @@
       .catch(error => {
         console.error('Error:', error);
       });
-    }
+    });
 
-    // Function to handle errors during scanning
-    function onScanError(errorMessage) {
-      console.error('Error scanning QR code: ', errorMessage);
-    }
-
-    // Ensuring Html5Qrcode is defined and initiating QR code scanning
-    if (typeof Html5Qrcode !== 'undefined') {
-      var html5QrCode = new Html5Qrcode("qr-reader");
-
-      // Start the scanner with the rear camera
-      html5QrCode.start(
-        { facingMode: "environment" }, // Rear camera
-        { fps: 10, qrbox: 250 },        // Scanning settings
-        onScanSuccess,                  // On successful scan
-        onScanError                     // On scan error
-      ).catch(err => {
-        console.error('Error starting camera: ', err);
-      });
-    } else {
-      console.error('Html5Qrcode is not defined. Make sure the script is loaded.');
-    }
+    // Request camera permission and start scanning
+    Instascan.Camera.getCameras().then(function (cameras) {
+      if (cameras.length > 0) {
+        scanner.start(cameras[0]); // Use the first available camera
+      } else {
+        console.error('No cameras found.');
+      }
+    }).catch(function (e) {
+      console.error(e);
+    });
   </script>
 </body>
 </html>
