@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR Code Scanner</title>
-  <!-- Load the Instascan library from GitHub -->
-  <script type="text/javascript" src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 </head>
 <body>
   <h1>QR Code Scanner</h1>
@@ -13,52 +11,39 @@
   <p id="qr-result">Scanned QR Code: None</p>
 
   <script>
-    let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+    const video = document.getElementById('preview');
+    const qrResult = document.getElementById('qr-result');
 
-    // Display scanned QR code
-    scanner.addListener('scan', function (content) {
-      document.getElementById("qr-result").innerText = "Scanned QR Code: " + content;
+    if ('BarcodeDetector' in window) {
+      // Barcode Detection API supported
+      const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
 
-      // Send the scanned QR code to Google Sheets via Google Apps Script
-      fetch('YOUR_GOOGLE_SCRIPT_URL', {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ qrCode: content })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          alert('QR Code stored successfully!');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-    });
-
-    // Request camera access and handle errors
-    Instascan.Camera.getCameras().then(function (cameras) {
-      if (cameras.length > 0) {
-        scanner.start(cameras[0]); // Use the first available camera
-      } else {
-        console.error('No cameras found.');
-        alert('No cameras found.');
-      }
-    }).catch(function (e) {
-      if (e.name === 'NotAllowedError') {
-        alert('Camera access denied.');
-      } else if (e.name === 'OverconstrainedError') {
-        alert('Camera constraints cannot be satisfied.');
-      } else if (e.name === 'NotFoundError') {
-        alert('No camera found on this device.');
-      } else {
-        alert('Camera error: ' + e.message);
-      }
-      console.error('Error accessing camera: ', e);
-    });
-  </script>
-</body>
-</html>
+      // Access camera and display the video feed
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then((stream) => {
+          video.srcObject = stream;
+          video.play();
+          
+          // Continuously scan for QR codes
+          const scanBarcode = () => {
+            barcodeDetector.detect(video)
+              .then((barcodes) => {
+                if (barcodes.length > 0) {
+                  qrResult.innerText = 'Scanned QR Code: ' + barcodes[0].rawValue;
+                  
+                  // Send QR code to Google Sheets via Apps Script
+                  fetch('YOUR_GOOGLE_SCRIPT_URL', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ qrCode: barcodes[0].rawValue })
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                    if (data.status === 'success') {
+                      alert('QR Code stored successfully!');
+                    }
+                  })
+                  .catch(error => {
+                
