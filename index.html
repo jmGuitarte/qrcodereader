@@ -1,61 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QR Code Scanner</title>
-  <!-- Include Html5Qrcode library from CDN -->
-  <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>QR Code Scanner / Reader</title>
 </head>
+
 <body>
-  <h1>QR Code Scanner</h1>
-  <div id="reader" style="width: 600px; height: 400px;"></div>
-  <p id="qr-result">Scanned QR Code: None</p>
-
-  <script>
-    // Initialize the QR code scanner
-    function onScanSuccess(qrCodeMessage) {
-      // Handle the result here
-      document.getElementById('qr-result').innerText = 'Scanned QR Code: ' + qrCodeMessage;
-
-      // Optionally send the scanned QR code to Google Sheets via Apps Script
-      fetch('YOUR_GOOGLE_SCRIPT_URL', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ qrCode: qrCodeMessage })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          alert('QR Code stored successfully!');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-    }
-
-    function onScanFailure(error) {
-      // Handle scan failure
-      console.warn(`QR code scan failed. Reason: ${error}`);
-    }
-
-    // Create an instance of Html5QrcodeScanner
-    const html5QrCode = new Html5Qrcode("reader");
-
-    // Start scanning
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-    html5QrCode.start(
-      { facingMode: "environment" }, // Use rear camera
-      config,
-      onScanSuccess,
-      onScanFailure)
-    .catch(err => {
-      console.error('Error starting the QR code scanner:', err);
-      alert('Error accessing the camera. Please check permissions.');
-    });
-  </script>
+    <div class="container">
+        <h1>Scan QR Codes</h1>
+        <div class="section">
+            <video id="qr-video" style="width: 100%;"></video>
+            <canvas id="qr-canvas" style="display: none;"></canvas>
+            <div id="qr-result"></div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+    <script src="script.js"></script>
 </body>
+
 </html>
