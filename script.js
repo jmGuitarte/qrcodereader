@@ -23,7 +23,7 @@ function startQRScanner() {
 
             if (code) {
                 qrResult.innerText = "QR Code Detected: " + code.data;
-                alert("You QR code is: " + code.data);
+                alert("Your QR code is: " + code.data);
                 saveToGoogleSheet(code.data); // Call the function to save to Google Sheets
             }
         }
@@ -45,6 +45,7 @@ async function saveToGoogleSheet(qrData) {
             body: JSON.stringify(data), // Send the scanned QR code and timestamp
             headers: {
                 "Content-Type": "application/json", // Use application/json for JSON data
+                "Accept": "application/json" // Accept JSON responses
             },
         });
 
@@ -58,5 +59,3 @@ async function saveToGoogleSheet(qrData) {
         console.error('Error:', error); // Handle errors
     }
 }
-
-document.addEventListener("DOMContentLoaded", startQRScanner);
