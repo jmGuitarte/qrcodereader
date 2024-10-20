@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR Code Scanner</title>
-  <!-- Make sure this script is properly loading -->
+  <!-- Loading html5-qrcode library from a reliable CDN -->
   <script src="https://unpkg.com/html5-qrcode@2.2.1/minified/html5-qrcode.min.js"></script>
 </head>
 <body>
@@ -37,22 +37,26 @@
       });
     }
 
+    // Function to handle errors during scanning
     function onScanError(errorMessage) {
-      // Handle errors during scanning
       console.error('Error scanning QR code: ', errorMessage);
     }
 
-    // Ensure the `Html5Qrcode` class is available
+    // Ensuring Html5Qrcode is defined and initiating QR code scanning
     if (typeof Html5Qrcode !== 'undefined') {
       var html5QrCode = new Html5Qrcode("qr-reader");
+
+      // Start the scanner with the rear camera
       html5QrCode.start(
-        { facingMode: "environment" }, // Use the rear camera
-        { fps: 10, qrbox: 250 },
-        onScanSuccess,
-        onScanError
-      );
+        { facingMode: "environment" }, // Rear camera
+        { fps: 10, qrbox: 250 },        // Scanning settings
+        onScanSuccess,                  // On successful scan
+        onScanError                     // On scan error
+      ).catch(err => {
+        console.error('Error starting camera: ', err);
+      });
     } else {
-      console.error('Html5Qrcode is not defined.');
+      console.error('Html5Qrcode is not defined. Make sure the script is loaded.');
     }
   </script>
 </body>
